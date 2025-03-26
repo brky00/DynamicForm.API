@@ -1,6 +1,8 @@
 ﻿
 using DynamicForm.API.Dto;
 using DynamicForm.API.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -26,7 +28,8 @@ public class FormsController : ControllerBase
     //endpoint like you wrote in the tasks
     // POST /forms
     [HttpPost]
-    //[Authorize]
+    //With that meta atribute only logged-in users can create a form (JWT)
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public async Task<IActionResult> CreateForm([FromBody] FormCreateDto dto)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -55,8 +58,9 @@ public class FormsController : ControllerBase
 
         return CreatedAtAction(nameof(GetFormById), new { id = form.Id }, form);
     }
-
     // GET /forms
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+
     [HttpGet]
     public async Task<IActionResult> GetForms()
     {
