@@ -79,7 +79,7 @@ public class FormsController : ControllerBase
 
         var result = new PagedResult<Form>(forms, totalCount, pageSize, pageNumber);
 
-        return Ok(result); // veya return Ok(forms);
+        return Ok(result); //and we send the paged result here
     }
 
     // GET /forms/{id}
