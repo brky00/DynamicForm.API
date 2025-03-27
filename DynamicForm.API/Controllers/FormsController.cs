@@ -1,12 +1,14 @@
 ﻿
 using DynamicForm.API.Dto;
 using DynamicForm.API.Models;
+using DynamicForm.API.Models.SubmissionFolder;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace DynamicForm.API.Controllers;
 
@@ -59,16 +61,25 @@ public class FormsController : ControllerBase
         return CreatedAtAction(nameof(GetFormById), new { id = form.Id }, form);
     }
     // GET /forms
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+  
 
+    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpGet]
-    public async Task<IActionResult> GetForms()
+    public async Task<IActionResult> GetForms(int pageNumber = 1, int pageSize = 5)
     {
-        var forms = await _context.Forms
-            .Include(f => f.Fields) //Includind the fields of the form
+        var queryForm = _context.Forms
+            .Include(f => f.Fields);
+         
+        var totalCount = await queryForm.CountAsync();
+
+        var forms = await queryForm
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
 
-        return Ok(forms);
+        var result = new PagedResult<Form>(forms, totalCount, pageSize, pageNumber);
+
+        return Ok(result); // veya return Ok(forms);
     }
 
     // GET /forms/{id}
@@ -85,3 +96,23 @@ public class FormsController : ControllerBase
         return Ok(form);
     }
 }
+
+
+//[HttpGet]
+//public async Task<IActionResult> GetSubmissions(int formId, int pageNumber = 1, int pageSize = 5)
+//{
+//    var query = _context.Submissions
+//        .Where(s => s.FormId == formId)
+//        .Include(s => s.Answers)
+//        .OrderByDescending(s => s.SubmittedAt);
+
+//    var totalCount = await query.CountAsync();
+//    var submissions = await query
+//        .Skip((pageNumber - 1) * pageSize)
+//        .Take(pageSize)
+//        .ToListAsync();
+//    var result = new PagedResult<Submission>(submissions, totalCount, pageSize, pageNumber); // I created a central pagination/paged result file/module which we can use multiple times in other Controllers too(for ex FormController)
+
+
+//    return Ok(result);
+//}
